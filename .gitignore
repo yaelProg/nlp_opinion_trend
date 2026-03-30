@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Environments / secrets
+.env
+
+# Editor settings
+.idea/
+.vscode/
+
+# Data outputs 
+social_data.csv
+
+# OS files
+Thumbs.db
+Desktop.ini
