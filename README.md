@@ -1,6 +1,6 @@
 # nlp_opinion_trend
 
-Collect English posts + comments from Reddit and Twitter into a single CSV (`social_data.csv`) for NLP analysis.
+Collect English posts + comments from Reddit and Twitter into a single Excel file (`social_data.xlsx`) for NLP analysis.
 
 ## Setup
 
@@ -24,17 +24,37 @@ setx REDDIT_USER_AGENT "nlp_opinion_trend by u/YOUR_REDDIT_USERNAME"
 
 Close and reopen your terminal so the environment variables are available.
 
-## Run
+## Run (env vars + constants)
 
-Collect from one or more subreddits:
+Set configuration with environment variables, then run without arguments:
 
-```bash
-python get_data.py --subreddit news --subreddit worldnews --posts 30 --comments 30
+```powershell
+$env:DATA_SOURCE="reddit"                # reddit | twitter | both
+$env:SUBREDDITS="news,worldnews"         # comma-separated
+$env:TWITTER_QUERIES="news,technology"   # comma-separated
+$env:POSTS_LIMIT="30"
+$env:COMMENTS_LIMIT="30"
+$env:INCLUDE_COMMENTS="true"
+$env:SIMULATE_CITY="true"
+$env:OUTPUT_FILE="social_data.xlsx"
+$env:DEBUG="false"
+python get_data.py
 ```
 
-Output file (default): `social_data.csv`
+Default output file: `social_data.xlsx`
 
 ### Notes
 - Reddit does not reliably expose user city/location. By default, the collector **simulates** the `city` field. Disable it with `--no-city-sim`.
 - If you want posts only: `--no-comments`
+
+## Clean the collected data
+
+Remove rows where `text` has fewer than 4 words, remove URLs, normalize whitespace, and save to `clean_data.xlsx`:
+
+```powershell
+$env:INPUT_FILE="social_data.xlsx"
+$env:CLEAN_OUTPUT_FILE="clean_data.xlsx"
+$env:MIN_WORDS="4"
+python clean_data.py
+```
 

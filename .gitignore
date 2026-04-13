@@ -16,7 +16,7 @@ ENV/
 .vscode/
 
 # Data outputs 
-social_data.csv
+social_data.xlsx
 
 # OS files
 Thumbs.db

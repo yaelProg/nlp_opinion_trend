@@ -1,88 +1,51 @@
 from __future__ import annotations
 from typing import Iterable, List
 
-import argparse
-import csv
+from openpyxl import Workbook
 
+import config
 from collector import Entry
 from reddit_collector import RedditCollector
 from twitter_collector import TwitterCollector
 
 
-CSV_FIELDS = ["id", "type", "parent_id", "text", "city", "timestamp"]
+FIELDS = ["id", "type", "parent_id", "text", "city", "timestamp"]
 
 
-def write_csv(entries: Iterable[Entry], out_path: str) -> int:
+def write_excel(entries: Iterable[Entry], out_path: str) -> int:
     n = 0
-    with open(out_path, "w", newline="", encoding="utf-8") as f:
-        w = csv.DictWriter(f, fieldnames=CSV_FIELDS)
-        w.writeheader()
-        for e in entries:
-            w.writerow(
-                {
-                    "id": e.id,
-                    "type": e.type,
-                    "parent_id": e.parent_id or "",
-                    "text": e.text,
-                    "city": e.city,
-                    "timestamp": e.timestamp,
-                }
-            )
-            n += 1
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "data"
+    ws.append(FIELDS)
+    for e in entries:
+        ws.append([e.id, e.type, e.parent_id or "", e.text, e.city, e.timestamp])
+        n += 1
+    wb.save(out_path)
     return n
 
 
-def build_arg_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(
-        description="Collect Reddit posts/comments and Twitter posts into a unified CSV"
-    )
-    p.add_argument(
-        "--source",
-        choices=["reddit", "twitter", "both"],
-        default="reddit",
-        help="Data source to use (default: reddit)",
-    )
-    p.add_argument(
-        "--subreddit",
-        action="append",
-        default=[],
-        help="Subreddit to pull from. Repeatable. Example: --subreddit news --subreddit worldnews",
-    )
-    p.add_argument("--posts", type=int, default=50, help="Posts per subreddit/query (default: 50)")
-    p.add_argument("--comments", type=int, default=50, help="Comments per Reddit post (default: 50)")
-    p.add_argument("--no-comments", action="store_true", help="Collect Reddit posts only")
-    p.add_argument("--no-city-sim", action="store_true", help="Leave city empty (no simulation)")
-    p.add_argument("--query", action="append", default=[], help="Twitter search query (repeatable)")
-    p.add_argument(
-        "--out",
-        default="social_data.csv",
-        help="Output CSV path (default: social_data.csv)",
-    )
-    return p
-
-
 def main() -> None:
-    args = build_arg_parser().parse_args()
-
     collectors: List[Iterable[Entry]] = []
+    twitter_collector = None
 
-    if args.source in ("reddit", "both"):
-        subreddits: List[str] = args.subreddit or ["news"]
+    if config.SOURCE in ("reddit", "both"):
+        subreddits: List[str] = config.SUBREDDITS
         reddit_collector = RedditCollector(
             subreddits=subreddits,
-            post_limit_per_subreddit=int(args.posts),
-            comment_limit_per_post=int(args.comments),
-            include_comments=not bool(args.no_comments),
-            simulate_cities=not bool(args.no_city_sim),
+            post_limit_per_subreddit=config.POSTS_LIMIT,
+            comment_limit_per_post=config.COMMENTS_LIMIT,
+            include_comments=config.INCLUDE_COMMENTS,
+            simulate_cities=config.SIMULATE_CITY,
         )
         collectors.append(reddit_collector.collect())
 
-    if args.source in ("twitter", "both"):
-        queries: List[str] = args.query or ["news"]
+    if config.SOURCE in ("twitter", "both"):
+        queries: List[str] = config.QUERIES
         twitter_collector = TwitterCollector(
             queries=queries,
-            max_results_per_query=int(args.posts),
-            simulate_cities=not bool(args.no_city_sim),
+            max_results_per_query=config.POSTS_LIMIT,
+            simulate_cities=config.SIMULATE_CITY,
         )
         collectors.append(twitter_collector.collect())
 
@@ -91,9 +54,26 @@ def main() -> None:
             for e in col:
                 yield e
 
-    entries = merged_entries()
-    n = write_csv(entries, args.out)
-    print(f"Wrote {n} rows to {args.out}")
+    try:
+        entries = merged_entries()
+        n = write_excel(entries, config.OUTPUT_FILE)
+        print(f"Wrote {n} rows to {config.OUTPUT_FILE}")
+    except Exception as e:
+        msg = str(e)
+        if "402 Payment Required" in msg or "does not have any credits" in msg:
+            print("Twitter API request failed: your account does not have API credits.")
+            print("Add billing/credits in your Twitter/X developer account and try again.")
+        else:
+            print(f"Data collection failed: {msg}")
+        return
+    if config.DEBUG and twitter_collector is not None:
+        print("Twitter debug stats:")
+        print(f"  queries={twitter_collector.stats['queries']}")
+        print(f"  fetched={twitter_collector.stats['fetched']}")
+        print(f"  kept={twitter_collector.stats['kept']}")
+        print(f"  filtered_lang={twitter_collector.stats['filtered_lang']}")
+        print(f"  filtered_empty={twitter_collector.stats['filtered_empty']}")
+        print(f"  filtered_non_english={twitter_collector.stats['filtered_non_english']}")
 
 
 if __name__ == "__main__":
