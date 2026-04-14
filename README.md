@@ -43,9 +43,14 @@ python get_data.py
 
 Default output file: `social_data.xlsx`
 
+### Text normalization
+
+All `text` values are lowercased, URLs are removed, and whitespace is normalized.
+
 ### Notes
-- Reddit does not reliably expose user city/location. By default, the collector **simulates** the `city` field. Disable it with `--no-city-sim`.
-- If you want posts only: `--no-comments`
+
+- Reddit does not reliably expose user city/location. Set `SIMULATE_CITY=false` to leave `city` empty.
+- Set `INCLUDE_COMMENTS=false` for Reddit posts only.
 
 ## Clean the collected data
 

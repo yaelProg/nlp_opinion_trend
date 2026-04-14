@@ -1,19 +1,9 @@
 from __future__ import annotations
+
 from openpyxl import Workbook, load_workbook
 
-import re
-
 import config
-
-URL_RE = re.compile(r"(https?://\S+|www\.\S+)", flags=re.IGNORECASE)
-WS_RE = re.compile(r"\s+")
-
-
-def clean_text(text: str) -> str:
-    text = text or ""
-    text = URL_RE.sub("", text)
-    text = WS_RE.sub(" ", text)
-    return text.strip()
+from text_utils import clean_text
 
 
 def word_count(text: str) -> int:
