@@ -10,12 +10,6 @@ Collect English posts + comments from Reddit and Twitter into a single Excel fil
 python -m pip install -r requirements.txt
 ```
 
-Optional (for spaCy lemmatization):
-
-```bash
-python -m spacy download en_core_web_sm
-```
-
 2) Create a Reddit API app:
 - Go to `https://www.reddit.com/prefs/apps`
 - Create an app (type: "script")
@@ -44,7 +38,6 @@ $env:INCLUDE_COMMENTS="true"
 $env:SIMULATE_CITY="true"
 $env:OUTPUT_FILE="social_data.xlsx"
 $env:DEBUG="false"
-$env:LEMMA_BACKEND="spacy"
 python get_data.py
 ```
 
@@ -52,11 +45,7 @@ Default output file: `social_data.xlsx`
 
 ### Text normalization
 
-All `text` values are lowercased, URLs are removed, and whitespace is normalized. Lemmatization is controlled by `LEMMA_BACKEND` (also set in `config.py` via env):
-
-- `none` — lowercase + URL/whitespace only
-- `lemma` — alias of spaCy lemmatization
-- `spacy` — spaCy `en_core_web_sm` lemmas (install model command above)
+All `text` values are lowercased, URLs are removed, and whitespace is normalized.
 
 ### Notes
 
@@ -71,7 +60,6 @@ Remove rows where `text` has fewer than 4 words, remove URLs, normalize whitespa
 $env:INPUT_FILE="social_data.xlsx"
 $env:CLEAN_OUTPUT_FILE="clean_data.xlsx"
 $env:MIN_WORDS="4"
-$env:LEMMA_BACKEND="spacy"
 python clean_data.py
 ```
 
