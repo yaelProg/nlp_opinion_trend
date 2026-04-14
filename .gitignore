@@ -19,6 +19,7 @@ ENV/
 social_data.xlsx
 clean_data.xlsx
 file_with_embeddings.xlsx
+file_with_clusters.xlsx
 
 # OS files
 Thumbs.db
