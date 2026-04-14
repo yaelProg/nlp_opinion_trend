@@ -43,6 +43,19 @@ python get_data.py
 
 Default output file: `social_data.xlsx`
 
+### Kibana logging (optional)
+
+You can stream logs to Elasticsearch (viewable in Kibana) by setting:
+
+```powershell
+$env:KIBANA_LOGGING_ENABLED="true"
+$env:ELASTICSEARCH_URL="http://localhost:9200"
+$env:ELASTICSEARCH_INDEX="nlp-opinion-trend-logs"
+# Optional:
+# $env:ELASTICSEARCH_API_KEY="YOUR_API_KEY"
+# $env:ELASTICSEARCH_TIMEOUT_SECONDS="3"
+```
+
 ### Text normalization
 
 All `text` values are lowercased, URLs are removed, and whitespace is normalized.

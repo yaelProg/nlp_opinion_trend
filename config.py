@@ -17,6 +17,13 @@ def _get_int(name: str, default: int) -> int:
     return int(raw)
 
 
+def _get_str(name: str, default: str = "") -> str:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip()
+
+
 def _get_list(name: str, default: list[str]) -> list[str]:
     raw = os.environ.get(name, "").strip()
     if not raw:
@@ -37,3 +44,9 @@ OUTPUT_FILE = os.environ.get("OUTPUT_FILE", "social_data.xlsx").strip() or "soci
 INPUT_FILE = os.environ.get("INPUT_FILE", "social_data.xlsx").strip() or "social_data.xlsx"
 CLEAN_OUTPUT_FILE = os.environ.get("CLEAN_OUTPUT_FILE", "clean_data.xlsx").strip() or "clean_data.xlsx"
 MIN_WORDS = _get_int("MIN_WORDS", 4)
+
+KIBANA_LOGGING_ENABLED = _get_bool("KIBANA_LOGGING_ENABLED", True)
+ELASTICSEARCH_URL = _get_str("ELASTICSEARCH_URL", "http://localhost:9200")
+ELASTICSEARCH_INDEX = _get_str("ELASTICSEARCH_INDEX", "nlp-opinion-trend-logs")
+ELASTICSEARCH_API_KEY = _get_str("ELASTICSEARCH_API_KEY", "")
+ELASTICSEARCH_TIMEOUT_SECONDS = _get_int("ELASTICSEARCH_TIMEOUT_SECONDS", 3)

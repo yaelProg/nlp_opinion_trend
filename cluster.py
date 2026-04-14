@@ -2,9 +2,12 @@ from __future__ import annotations
 from pathlib import Path
 from sklearn.cluster import KMeans
 
-from loguru import logger
+import ast
 import numpy as np
 import pandas as pd
+
+from loguru import logger
+from logging_utils import setup_logger
 
 
 INPUT_FILE = "file_with_embeddings.xlsx"
