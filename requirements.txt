@@ -2,6 +2,7 @@ praw==7.8.1
 langdetect==1.0.9
 tweepy==4.14.0
 openpyxl==3.0.10
+loguru==0.7.2
 
 pandas==1.5.3
 numpy==1.23.5
@@ -22,6 +23,7 @@ praw==7.8.1
 langdetect==1.0.9
 tweepy==4.14.0
 openpyxl==3.0.10
+loguru==0.7.2
 
 pandas==1.5.3
 numpy==1.23.5

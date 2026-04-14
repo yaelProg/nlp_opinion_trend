@@ -1,10 +1,12 @@
 from __future__ import annotations
 from typing import Iterable, List
 from openpyxl import Workbook
+from loguru import logger
 
 import config
 
 from collector import Entry
+from logging_utils import setup_logger
 from reddit_collector import RedditCollector
 from twitter_collector import TwitterCollector
 
@@ -26,11 +28,14 @@ def write_excel(entries: Iterable[Entry], out_path: str) -> int:
 
 
 def main() -> None:
+    setup_logger()
+    logger.info("Starting data collection pipeline with source={}", config.SOURCE)
     collectors: List[Iterable[Entry]] = []
     twitter_collector = None
 
     if config.SOURCE in ("reddit", "both"):
         subreddits: List[str] = config.SUBREDDITS
+        logger.info("Configuring Reddit collector for {} subreddits", len(subreddits))
         reddit_collector = RedditCollector(
             subreddits=subreddits,
             post_limit_per_subreddit=config.POSTS_LIMIT,
@@ -42,6 +47,7 @@ def main() -> None:
 
     if config.SOURCE in ("twitter", "both"):
         queries: List[str] = config.QUERIES
+        logger.info("Configuring Twitter collector for {} queries", len(queries))
         twitter_collector = TwitterCollector(
             queries=queries,
             max_results_per_query=config.POSTS_LIMIT,
@@ -57,23 +63,23 @@ def main() -> None:
     try:
         entries = merged_entries()
         n = write_excel(entries, config.OUTPUT_FILE)
-        print(f"Wrote {n} rows to {config.OUTPUT_FILE}")
+        logger.info("Wrote {} rows to {}", n, config.OUTPUT_FILE)
     except Exception as e:
         msg = str(e)
         if "402 Payment Required" in msg or "does not have any credits" in msg:
-            print("Twitter API request failed: your account does not have API credits.")
-            print("Add billing/credits in your Twitter/X developer account and try again.")
+            logger.error("Twitter API request failed: account does not have API credits.")
+            logger.error("Add billing/credits in your Twitter/X developer account and try again.")
         else:
-            print(f"Data collection failed: {msg}")
+            logger.exception("Data collection failed: {}", msg)
         return
     if config.DEBUG and twitter_collector is not None:
-        print("Twitter debug stats:")
-        print(f"  queries={twitter_collector.stats['queries']}")
-        print(f"  fetched={twitter_collector.stats['fetched']}")
-        print(f"  kept={twitter_collector.stats['kept']}")
-        print(f"  filtered_lang={twitter_collector.stats['filtered_lang']}")
-        print(f"  filtered_empty={twitter_collector.stats['filtered_empty']}")
-        print(f"  filtered_non_english={twitter_collector.stats['filtered_non_english']}")
+        logger.info("Twitter debug stats:")
+        logger.info("  queries={}", twitter_collector.stats["queries"])
+        logger.info("  fetched={}", twitter_collector.stats["fetched"])
+        logger.info("  kept={}", twitter_collector.stats["kept"])
+        logger.info("  filtered_lang={}", twitter_collector.stats["filtered_lang"])
+        logger.info("  filtered_empty={}", twitter_collector.stats["filtered_empty"])
+        logger.info("  filtered_non_english={}", twitter_collector.stats["filtered_non_english"])
 
 
 if __name__ == "__main__":

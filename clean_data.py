@@ -1,8 +1,9 @@
 from __future__ import annotations
-
+from loguru import logger
 from openpyxl import Workbook, load_workbook
 
 import config
+from logging_utils import setup_logger
 from text_utils import clean_text
 
 
@@ -57,8 +58,10 @@ def clean_excel(input_path: str, output_path: str, min_words: int = 4) -> tuple[
 
 
 def main() -> None:
+    setup_logger()
+    logger.info("Starting clean data pipeline. input={}, output={}", config.INPUT_FILE, config.CLEAN_OUTPUT_FILE)
     kept, removed = clean_excel(config.INPUT_FILE, config.CLEAN_OUTPUT_FILE, min_words=config.MIN_WORDS)
-    print(f"Saved {kept} cleaned rows to {config.CLEAN_OUTPUT_FILE} (removed {removed} rows)")
+    logger.info("Saved {} cleaned rows to {} (removed {} rows)", kept, config.CLEAN_OUTPUT_FILE, removed)
 
 
 if __name__ == "__main__":
