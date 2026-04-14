@@ -1,28 +1,12 @@
-"""
-Reddit collector using PRAW.
-
-Authentication is done via environment variables:
-  - REDDIT_CLIENT_ID
-  - REDDIT_CLIENT_SECRET
-  - REDDIT_USER_AGENT
-
-Notes:
-  - Reddit APIs do not provide reliable per-user city/location. Use the optional
-    city simulation in `text_utils.simulate_city()` if you need a city field.
-  - PRAW is polite by default and respects Reddit API rules; we still implement
-    backoff for 429/TooManyRequests.
-"""
-
 from __future__ import annotations
+from datetime import datetime, timezone
+from typing import Iterable, List, Optional, Sequence
+from praw.models import Comment, Submission
+from prawcore import exceptions as praw_exceptions 
 
 import os
 import time
-from datetime import datetime, timezone
-from typing import Iterable, List, Optional, Sequence
-
 import praw
-from praw.models import Comment, Submission
-from prawcore import exceptions as praw_exceptions
 
 from collector import Collector, Entry, utc_iso
 from text_utils import clean_text, is_english, simulate_city
@@ -74,19 +58,11 @@ class RedditCollector(Collector):
         )
 
     def _with_retries(self, fn, *, what: str):
-        """
-        Retry wrapper for PRAW calls.
-
-        Handles:
-          - TooManyRequests (rate limit / 429)
-          - transient server issues
-        """
         sleep_s = self.backoff_seconds
         for attempt in range(1, self.max_retries + 1):
             try:
                 return fn()
             except praw_exceptions.TooManyRequests as e:
-                # PRAW provides a recommended sleep time via e.sleep_time
                 wait = float(getattr(e, "sleep_time", sleep_s))
                 time.sleep(max(wait, sleep_s))
                 sleep_s *= 2
@@ -98,7 +74,6 @@ class RedditCollector(Collector):
                 time.sleep(sleep_s)
                 sleep_s *= 2
             except Exception:
-                # Unknown error: retry a few times, then raise.
                 if attempt >= self.max_retries:
                     raise
                 time.sleep(sleep_s)
@@ -111,7 +86,6 @@ class RedditCollector(Collector):
 
     def _collect_subreddit(self, subreddit: str) -> Iterable[Entry]:
         def get_posts():
-            # "hot" is stable for demos; you can switch to "new" or "top".
             return list(self.reddit.subreddit(subreddit).hot(limit=self.post_limit_per_subreddit))
 
         posts: List[Submission] = self._with_retries(get_posts, what=f"fetching posts from r/{subreddit}")
@@ -142,7 +116,6 @@ class RedditCollector(Collector):
         )
 
     def _collect_comments(self, submission: Submission, parent_post_id: str) -> Iterable[Entry]:
-        # Replace "MoreComments" objects for real comment bodies.
         def expand():
             submission.comments.replace_more(limit=0)
             return submission.comments.list()
@@ -177,4 +150,3 @@ class RedditCollector(Collector):
             city=city,
             timestamp=utc_iso(created),
         )
-

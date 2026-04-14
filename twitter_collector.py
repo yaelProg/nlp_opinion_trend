@@ -72,7 +72,7 @@ class TwitterCollector(Collector):
         def search():
             return self.client.search_recent_tweets(
                 query=query,
-                max_results=min(self.max_results_per_query, 100),
+                max_results=min(self.max_results_per_query, 1000),
                 tweet_fields=["created_at", "lang"],
             )
 

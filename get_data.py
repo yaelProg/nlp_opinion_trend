@@ -1,9 +1,9 @@
 from __future__ import annotations
 from typing import Iterable, List
-
 from openpyxl import Workbook
 
 import config
+
 from collector import Entry
 from reddit_collector import RedditCollector
 from twitter_collector import TwitterCollector

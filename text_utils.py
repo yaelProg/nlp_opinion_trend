@@ -7,86 +7,12 @@ from typing import Optional
 _URL_RE = re.compile(r"(https?://\S+|www\.\S+)", flags=re.IGNORECASE)
 _WHITESPACE_RE = re.compile(r"\s+")
 _spacy_nlp = None
-_nltk_ready = False
 
 
 def _lemma_backend() -> str:
     import config
 
     return config.LEMMA_BACKEND
-
-
-def _ensure_nltk_data() -> None:
-    global _nltk_ready
-    if _nltk_ready:
-        return
-    import nltk
-
-    for pkg in (
-        "punkt",
-        "punkt_tab",
-        "wordnet",
-        "omw-1.4",
-        "averaged_perceptron_tagger",
-        "averaged_perceptron_tagger_eng",
-    ):
-        try:
-            nltk.download(pkg, quiet=True)
-        except Exception:
-            pass
-    _nltk_ready = True
-
-
-def _nltk_pos_to_wordnet(tag: str) -> str:
-    if tag.startswith("J"):
-        return "a"
-    if tag.startswith("V"):
-        return "v"
-    if tag.startswith("N"):
-        return "n"
-    if tag.startswith("R"):
-        return "r"
-    return "n"
-
-
-def _lemmatize_nltk_stem(text: str) -> str:
-    import nltk
-    from nltk.stem import PorterStemmer
-    from nltk.tokenize import word_tokenize
-
-    _ensure_nltk_data()
-    stemmer = PorterStemmer()
-    try:
-        tokens = word_tokenize(text)
-    except LookupError:
-        _ensure_nltk_data()
-        tokens = word_tokenize(text)
-    return " ".join(stemmer.stem(t) for t in tokens if t)
-
-
-def _lemmatize_nltk_lemma(text: str) -> str:
-    import nltk
-    from nltk.stem import WordNetLemmatizer
-    from nltk.tag import pos_tag
-    from nltk.tokenize import word_tokenize
-
-    _ensure_nltk_data()
-    lemmatizer = WordNetLemmatizer()
-    try:
-        tokens = word_tokenize(text)
-        tagged = pos_tag(tokens)
-    except LookupError:
-        _ensure_nltk_data()
-        tokens = word_tokenize(text)
-        tagged = pos_tag(tokens)
-    out: list[str] = []
-    for word, tag in tagged:
-        w = word.lower()
-        if not w:
-            continue
-        wn_pos = _nltk_pos_to_wordnet(tag)
-        out.append(lemmatizer.lemmatize(w, wn_pos))
-    return " ".join(out)
 
 
 def _lemmatize_spacy(text: str) -> str:
@@ -104,11 +30,7 @@ def _apply_lemma(text_lower: str) -> str:
     backend = _lemma_backend()
     if backend in ("", "none", "off", "false"):
         return text_lower
-    if backend in ("nltk_stem", "stem"):
-        return _lemmatize_nltk_stem(text_lower)
-    if backend in ("nltk_lemma", "nltk", "lemma"):
-        return _lemmatize_nltk_lemma(text_lower)
-    if backend in ("spacy",):
+    if backend in ("spacy", "lemma"):
         return _lemmatize_spacy(text_lower)
     return text_lower
 

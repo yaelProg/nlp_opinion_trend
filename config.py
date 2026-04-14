@@ -38,4 +38,4 @@ INPUT_FILE = os.environ.get("INPUT_FILE", "social_data.xlsx").strip() or "social
 CLEAN_OUTPUT_FILE = os.environ.get("CLEAN_OUTPUT_FILE", "clean_data.xlsx").strip() or "clean_data.xlsx"
 MIN_WORDS = _get_int("MIN_WORDS", 4)
 
-LEMMA_BACKEND = os.environ.get("LEMMA_BACKEND", "nltk_lemma").strip().lower()
+LEMMA_BACKEND = os.environ.get("LEMMA_BACKEND", "spacy").strip().lower()

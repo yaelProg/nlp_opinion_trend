@@ -17,6 +17,8 @@ ENV/
 
 # Data outputs 
 social_data.xlsx
+clean_data.xlsx
+file_with_embeddings.xlsx
 
 # OS files
 Thumbs.db
